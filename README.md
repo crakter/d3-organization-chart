@@ -31,7 +31,7 @@ yarn add d3-org-chart
 
 ### Usage
 ```
-import { TreeChart } from 'd3-organization-chart'
+import { TreeChart } from 'd3-org-chart'
 
 
 new TreeChart()
