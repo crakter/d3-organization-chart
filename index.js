@@ -26,7 +26,9 @@ export class TreeChart {
       subordinates: 'Subordinates',
       direct: 'Direct',
       fontFamily: 'Material Design Icons',
-      onNodeClick: d => d
+      nodeClick: false,
+      onNodeClick: null,
+      onNodeDblClick: null
     }
 
     this.getChartState = () => attrs
@@ -195,11 +197,13 @@ export class TreeChart {
       })
     })
 
-    // Collapse all children at first
-    attrs.root.children.forEach(d => this.collapse(d))
+    if (typeof attrs.root.children !== 'undefined') {
+      // Collapse all children at first
+      attrs.root.children.forEach(d => this.collapse(d))
 
-    // Then expand some nodes, which have `expanded` property set
-    attrs.root.children.forEach(d => this.expandSomeNodes(d))
+      // Then expand some nodes, which have `expanded` property set
+      attrs.root.children.forEach(d => this.expandSomeNodes(d))
+    }
 
     // *************************  DRAWING **************************
     //Add svg
@@ -604,11 +608,22 @@ export class TreeChart {
       .attr('class', 'node')
       .attr('transform', () => `translate(${x0},${y0})`)
       .attr('cursor', 'pointer')
+      .attr('title', 'Dobbeltklikk for å endre kartet')
       .on('click', ({ data }) => {
+        if (attrs.onNodeClick === null) return
         if ([...d3.event.srcElement.classList].includes('node-button-circle')) {
           return
         }
         attrs.onNodeClick(data)
+      })
+      .on('dblclick', ({ data }) => {
+        if (attrs.onNodeDblClick === null) return
+        if ([...d3.event.srcElement.classList].includes('node-button-circle')) {
+          return
+        }
+        attrs.nodeClick = true
+        attrs.onNodeDblClick(data)
+        setTimeout(() => (attrs.nodeClick = false), 300)
       })
 
     // Add background rectangle for the nodes
@@ -1021,14 +1036,16 @@ export class TreeChart {
       })
     })
 
-    // Expand all nodes first
-    attrs.root.children.forEach(this.expand)
+    if (typeof attrs.root.children !== 'undefined') {
+      // Expand all nodes first
+      attrs.root.children.forEach(this.expand)
 
-    // Then collapse them all
-    attrs.root.children.forEach(d => this.collapse(d))
+      // Then collapse them all
+      attrs.root.children.forEach(d => this.collapse(d))
 
-    // Then only expand nodes, which have expanded proprty set to true
-    attrs.root.children.forEach(ch => this.expandSomeNodes(ch))
+      // Then only expand nodes, which have expanded proprty set to true
+      attrs.root.children.forEach(ch => this.expandSomeNodes(ch))
+    }
 
     // Redraw Graphs
     this.update(attrs.root)
@@ -1055,6 +1072,7 @@ export class TreeChart {
   // Zoom handler function
   zoomed() {
     const attrs = this.getChartState()
+    if (attrs.nodeClick) return
     const chart = attrs.chart
 
     // Get d3 event's transform object
